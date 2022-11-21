@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <unistd.h>
+sem_t full,empty;
+pthread_mutex_t mutex;
+int buffer[10];
+int count=0;
+
+
+
+void *producer(void *arg){
+	long int num=(long int)arg;
+        sleep(rand()%5);
+	sem_wait(&empty);
+	pthread_mutex_lock(&mutex);
+	
+	
+	buffer[count]=rand()%10;
+	printf("\n producer %ld producer %d",num+1,buffer[count]);
+	count++;
+        
+
+	pthread_mutex_unlock(&mutex);
+	sem_post(&full);
+	//pthread_exit(NULL);
+}
+
+
+void *consumer(void *arg){
+	long int num=(long int)arg;
+	sleep(rand()%5);
+	sem_wait(&full);
+	pthread_mutex_lock(&mutex);
+	
+	count--;
+	printf("\n consumer %ld consumed %d",num+1,buffer[count]);
+	
+	pthread_mutex_unlock(&mutex);
+	sem_post(&empty);
+	//pthread_exit(NULL);
+}
+
+int main(){
+	int np,nc;
+	//initialize threads
+	
+	printf("Enter no of producers and consumers");
+	scanf("%d %d",&np,&nc);
+	pthread_t p[np],c[nc];
+	unsigned long int i;
+	
+	
+
+	//inititalization
+	sem_init(&full,1,0);
+	sem_init(&empty,1,10);
+	pthread_mutex_init(&mutex,NULL);
+
+	//create threads
+	for(i=0;i<np;i++){
+	pthread_create(&p[i],NULL,producer,(void *)i);
+	}
+	for(i=0;i<nc;i++){
+	pthread_create(&c[i],NULL,consumer,(void *)i);
+	}
+
+	//join threads
+	for(int i=0;i<np;i++){
+	pthread_join(p[i],NULL);
+	}
+	for(int i=0;i<nc;i++){
+	pthread_join(c[i],NULL);
+	}
+
+
+
+}

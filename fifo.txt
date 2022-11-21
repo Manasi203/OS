@@ -1,0 +1,108 @@
+fifo1.c
+
+#include<stdio.h>
+#include<string.h>
+#include<unistd.h>
+#include<sys/stat.h>
+#include<sys/types.h>
+#include<fcntl.h>
+
+void main()
+{
+    int fd1,fd2;
+    char *myfifo1="file1",str1[100],str2[100];    //declare 2 fifo files named file1 and file2
+    char *myfifo2="file2";
+   
+    
+    //create fifo files
+    fd1=mkfifo(myfifo1,0666);    //owner gro owner othersrw permissions
+    fd2=mkfifo(myfifo2,0666);
+    
+    //write data on first fifo pipe
+    
+    printf("\nenter string ");
+    fgets(str1,100,stdin);
+    
+    fd1=open(myfifo1,O_WRONLY);
+    write(fd1,str1,strlen(str1)+1);
+    close(fd1);
+    
+    //read pipe2
+    
+    fd2=open(myfifo2,O_RDONLY);
+    read(fd2,str2,100);
+    
+    printf("\nMessage from pipe 2 is:\n%s",str2);
+    close(fd2);
+    
+    
+    
+    
+}
+
+
+
+fifo2.c
+
+#include<stdio.h>
+#include<string.h>
+#include<unistd.h>
+#include<sys/stat.h>
+#include<sys/types.h>
+#include<fcntl.h>
+
+void main(){
+   FILE *fp;
+   int fd1,fd2,l=1,w=1,c=0,i;
+    char *myfifo1="file1",str1[100],ch;    //declare 2 fifo files named file1 and file2
+    char *myfifo2="file2",str2[100];
+    
+    
+    
+    //read from pipe 1
+    fd1=open(myfifo1,O_RDONLY);
+    read(fd1,str1,100);
+    printf("\nPIpe 1 is %s",str1);
+    
+    
+    //count no of lines woe=rds and characters
+    i=0;
+    while(str1[i]!='\0'){
+      if(str1[i]=='.' || str1[i]=='\n')l++;
+      else if(str1[i]==' ')w++;
+      else c++;
+      i++;
+      
+    }
+    
+    //write result in textf ile
+    
+    fp=fopen("kp.txt","w");
+    fprintf(fp,"\n no of lines is %d",l);
+    fprintf(fp,"\n no of words is %d",w);
+    fprintf(fp,"\n no of cahrs is %d",c);
+    fclose(fp);
+    
+    //open file to read
+    
+    fp=fopen("kp.txt","r");
+    ch=fgetc(fp);
+    while(ch!=EOF){
+      str2[i]=ch;
+      i++;
+      ch=fgetc(fp);
+      
+    }
+    str2[i]='\0';
+    fclose(fp);
+    close(fd1);
+    
+    //write to pipe2
+    
+    fd2=open(myfifo2,O_WRONLY);
+    write(fd2,str2,strlen(str2)+1);
+    close(fd2);
+     
+    
+    
+}

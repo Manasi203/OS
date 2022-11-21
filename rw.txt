@@ -1,0 +1,64 @@
+#include<stdio.h>
+#include<pthread.h>
+#include <unistd.h>
+pthread_mutex_t wsem,mutex;
+int a=10;
+int readcount=0;
+
+void * reader(void *arg){
+	long int num=(long int) arg;
+
+	pthread_mutex_lock(&mutex);	    
+	    readcount++;
+	pthread_mutex_unlock(&mutex);
+	
+	if(readcount==1) pthread_mutex_lock(&wsem);
+       printf("\nreader %ld is in critical section",num+1);
+	printf("\n reader %ld reading data as %d",num+1,a);
+	sleep(1);
+	
+	pthread_mutex_unlock(&mutex);
+	    readcount--;
+	pthread_mutex_lock(&mutex);
+	
+	if(readcount==0) pthread_mutex_unlock(&wsem);
+        printf("\nreader %ld is leaving critical section",num+1);
+}
+
+void * writer(void *arg){
+	long int num=(long int) arg;
+
+	pthread_mutex_lock(&wsem);
+
+	printf("\nwriter %ld has written data as %d",num+1,++a);
+	sleep(1);
+
+	pthread_mutex_unlock(&wsem);
+}
+
+int main(){
+	printf("\n Enter no of reader and writer");
+	int nor,now;
+	long int i; 
+	scanf("%d %d",&nor,&now);
+	pthread_t r[10],w[10];  //create thread variables
+
+	//initialize
+	pthread_mutex_init(&wsem,NULL);
+	pthread_mutex_init(&mutex,NULL);
+	
+        //create
+	for(i=0;i<now;i++)
+	pthread_create(&w[i],NULL,writer,(void *)i);
+	
+	for(i=0;i<nor;i++)
+	pthread_create(&r[i],NULL,reader,(void *)i);
+	
+        //join
+	for(i=0;i<now;i++)
+	pthread_join(w[i],NULL);
+
+	for(i=0;i<nor;i++)
+	pthread_join(r[i],NULL);
+
+}

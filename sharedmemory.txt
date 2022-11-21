@@ -1,0 +1,43 @@
+//client.h
+
+
+#include<sys/ipc.h>
+#include<sys/shm.h>
+#include<stdio.h>
+#include<string.h>
+int main(){
+key_t key=ftok("shmfile",65);   //used to create unique key for the shared memory
+
+int shmid=shmget(key,100,0666|IPC_CREAT);  //create shared memory
+
+void *shmaddr;
+shmaddr=shmat(shmid,NULL,0);   //attach memory to the address space
+char str[100];
+printf("the shared memory is attached to the address %p\n", shmaddr);
+printf("write data : ");
+
+fgets(str, 100, stdin);
+strcpy(shmaddr, str);
+
+printf("Data written in shared memory is:\n%s", (char * ) shmaddr);
+return 0;
+}
+
+//server
+
+#include<sys/ipc.h>
+#include<sys/shm.h>
+#include<stdio.h>
+
+int main(){
+key_t key=ftok("shmfile",65);
+
+int shmid=shmget(key,100,0666);
+void *shmaddr;
+shmaddr=shmat(shmid,NULL,0);
+printf("shmid of the shared memory is %d\n", shmid);
+
+printf("the shared memory is attached to the address %p\n", shmaddr);
+printf("Data read from the shared memory is:\n%s", (char * ) shmaddr);
+
+return 0;}
